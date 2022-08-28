@@ -8,6 +8,9 @@ namespace EstimateConverter
         public Form1()
         {
             InitializeComponent();
+            ConverterRule.GenerateRule();
+            mode1label.Text = "Days";
+            mode2label.Text = "SPs";
         }
 
         private int numberOfUS = 1;
@@ -15,9 +18,6 @@ namespace EstimateConverter
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if(numberOfUS == 1)
-                ConverterRule.GenerateRule();
-
             var storyName = textBox1.Text;
             var SP = comboBox1.Text;
 
@@ -54,6 +54,37 @@ namespace EstimateConverter
             MessageBox.Show("WBS generated and saved");
             excelFile.closeExcel();
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            System.Windows.Forms.Application.Exit();
+        }
+
+        private void mode1textbox_TextChanged(object sender, EventArgs e)
+        {
+            if (mode1textbox.Text != String.Empty)
+            {
+                mode2textbox.Text = String.Empty;
+                var value = Convert.ToDouble(mode1textbox.Text);
+                foreach (var i in ConverterRule.convertRule)
+                {
+                    if (value >= i.Value.Item1 && value <= i.Value.Item2)
+                    {
+                        if (i.Key == 21)
+                        {
+                            mode2textbox.Text = "21 or more";
+                            MessageBox.Show("Need to be decomposed");
+                        }
+                        mode2textbox.Text = Convert.ToString(i.Key);
+                        break;
+                    }
+                }
+            }
+            else 
+            {
+                mode2textbox.Text = String.Empty;
+            }
+        }
     }
 
     public static class ConverterRule
@@ -62,7 +93,7 @@ namespace EstimateConverter
         public static void GenerateRule()
         {
             double optPercent = 0.8;  // 20% from most likely
-            double pesPercent = 1.25; // 25% from most likely
+            double pesPercent = 1.35; // 35% from most likely
 
             convertRule.Add(1, new Tuple<double, double, double>(0.7*optPercent, 0.7*pesPercent,0.7));
             convertRule.Add(2, new Tuple<double, double, double>(1 * optPercent, 1 * pesPercent, 1));
@@ -70,6 +101,8 @@ namespace EstimateConverter
             convertRule.Add(5, new Tuple<double, double, double>(2 * optPercent, 2 * pesPercent, 2));
             convertRule.Add(8, new Tuple<double, double, double>(3.5 * optPercent, 3.5 * pesPercent, 3.5));
             convertRule.Add(13, new Tuple<double, double, double>(5 * optPercent, 5 * pesPercent, 5));
+            convertRule.Add(0, new Tuple<double, double, double>(0.1, 0.5, 0.4));
+            convertRule.Add(21, new Tuple<double, double, double>(7, 20, 15));
         }
 
         public static Tuple<double,double,double> GetManDayForSP(string SP)
