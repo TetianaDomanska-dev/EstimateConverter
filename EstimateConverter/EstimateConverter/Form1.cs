@@ -11,7 +11,7 @@ namespace EstimateConverter
         }
 
         private int numberOfUS = 1;
-        Dictionary<int, Tuple<string, string, double>> listOfUS = new Dictionary<int, Tuple<string, string, double>>();
+        Dictionary<int, Tuple<string, string, Tuple<double, double, double>>> listOfUS = new Dictionary<int, Tuple<string, string, Tuple<double, double, double>>>();
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -25,9 +25,9 @@ namespace EstimateConverter
             {
                 var manDays = ConverterRule.GetManDayForSP(SP);
 
-                listOfUS.Add(numberOfUS, new Tuple<string, string, double>(storyName, SP, manDays));
+                listOfUS.Add(numberOfUS, new Tuple<string, string, Tuple<double, double, double>>(storyName, SP, manDays));
                 listBox1.Items.Insert(numberOfUS-1, Convert.ToString(numberOfUS) + ") " 
-                    + storyName + " - " + SP + ", ManDays " + Convert.ToString(manDays) + ";");
+                    + storyName + " - " + SP + ", Expected ManDays " + Convert.ToString(manDays.Item3) + ";");
 
                 numberOfUS++;
                 label1.Text = Convert.ToString(numberOfUS); 
@@ -47,7 +47,8 @@ namespace EstimateConverter
             foreach (var story in listOfUS)
             {
                 excelFile.addDataToExcel(Convert.ToString(story.Key), 
-                    story.Value.Item1, story.Value.Item2, Convert.ToString(story.Value.Item3));
+                    story.Value.Item1, story.Value.Item2, Convert.ToString(story.Value.Item3.Item1),
+                    Convert.ToString(story.Value.Item3.Item2), Convert.ToString(story.Value.Item3.Item3));
             }
 
             MessageBox.Show("WBS generated and saved");
@@ -57,19 +58,21 @@ namespace EstimateConverter
 
     public static class ConverterRule
     {
-        public static Dictionary<int, double> convertRule = new Dictionary<int, double>();
-
+        public static Dictionary<int,Tuple< double, double, double>> convertRule = new Dictionary<int, Tuple<double, double, double>>();
         public static void GenerateRule()
         {
-            convertRule.Add(1, 0.7);
-            convertRule.Add(2, 1);
-            convertRule.Add(3, 1.5);
-            convertRule.Add(5, 2);
-            convertRule.Add(8, 3.5);
-            convertRule.Add(13, 5); // +- 20% opt & 25% pes
+            double optPercent = 0.8;  // 20% from most likely
+            double pesPercent = 1.25; // 25% from most likely
+
+            convertRule.Add(1, new Tuple<double, double, double>(0.7*optPercent, 0.7*pesPercent,0.7));
+            convertRule.Add(2, new Tuple<double, double, double>(1 * optPercent, 1 * pesPercent, 1));
+            convertRule.Add(3, new Tuple<double, double, double>(1.5 * optPercent, 1.5 * pesPercent, 1.5));
+            convertRule.Add(5, new Tuple<double, double, double>(2 * optPercent, 2 * pesPercent, 2));
+            convertRule.Add(8, new Tuple<double, double, double>(3.5 * optPercent, 3.5 * pesPercent, 3.5));
+            convertRule.Add(13, new Tuple<double, double, double>(5 * optPercent, 5 * pesPercent, 5));
         }
 
-        public static double GetManDayForSP(string SP)
+        public static Tuple<double,double,double> GetManDayForSP(string SP)
         {
             var res = SP.Split(" ");
             int numOfSP = Convert.ToInt32(res[0]);
@@ -79,7 +82,7 @@ namespace EstimateConverter
     public class ExcelFile
     {
 
-        private string excelFilePath = @"C:\Users\tdoma\Source\Repos\EstimateConverter\EstimateConverter\WBS.xlsx";
+        private string excelFilePath = @"C:\EstimateConverter\EstimateConverter\EstimateConverter\WBS.xlsx";
 
         private int rowNumber = 2; // define first row number to enter data in excel
 
@@ -122,14 +125,16 @@ namespace EstimateConverter
             myExcelWorkSheet = (Microsoft.Office.Interop.Excel.Worksheet)myExcelWorkbook.Worksheets[3]; // define in which worksheet, do you want to add data
         }
 
-        public void addDataToExcel(string numberOfUS, string storyName, string SP,  string manDays)
+        public void addDataToExcel(string numberOfUS, string storyName, string SP,  string optManDays, string pesManDays, string expectManDays)
         {
 
             myExcelWorkSheet.Cells[rowNumber, "A"] = numberOfUS;
             myExcelWorkSheet.Cells[rowNumber, "B"] = storyName;
             myExcelWorkSheet.Cells[rowNumber, "P"] = SP;
-            myExcelWorkSheet.Cells[rowNumber, "H"] = manDays;
-            rowNumber++;  // if you put this method inside a loop, you should increase rownumber by one 
+            myExcelWorkSheet.Cells[rowNumber, "F"] = optManDays;
+            myExcelWorkSheet.Cells[rowNumber, "G"] = pesManDays;
+            myExcelWorkSheet.Cells[rowNumber, "H"] = expectManDays;
+            rowNumber++;
 
         }
 
