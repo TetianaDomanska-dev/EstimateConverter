@@ -129,6 +129,7 @@
             this.changeModeLabel.Size = new System.Drawing.Size(48, 15);
             this.changeModeLabel.TabIndex = 8;
             this.changeModeLabel.Text = "<----->";
+            this.changeModeLabel.Click += new System.EventHandler(this.changeModeLabel_Click);
             // 
             // mode2textbox
             // 
