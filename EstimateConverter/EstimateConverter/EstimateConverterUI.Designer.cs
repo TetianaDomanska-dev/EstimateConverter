@@ -1,6 +1,6 @@
 ﻿namespace EstimateConverter
 {
-    partial class Form1
+    partial class EstimateConverterUI
     {
         /// <summary>
         ///  Required designer variable.
