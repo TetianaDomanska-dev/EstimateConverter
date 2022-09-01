@@ -9,12 +9,16 @@ namespace EstimateConverter
         {
             InitializeComponent();
             ConverterRule.GenerateRule();
-            mode1label.Text = "Days";
-            mode2label.Text = "SPs";
+            mode1label.Text = days;
+            mode2label.Text = sps;
         }
 
         private int numberOfUS = 1;
         Dictionary<int, Tuple<string, string, Tuple<double, double, double>>> listOfUS = new Dictionary<int, Tuple<string, string, Tuple<double, double, double>>>();
+        int mode = 1;
+        string days = "Days";
+        string sps = "SPs";
+        int mode2tbwidth = 71;
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -64,19 +68,34 @@ namespace EstimateConverter
         {
             if (mode1textbox.Text != String.Empty)
             {
-                mode2textbox.Text = String.Empty;
-                var value = Convert.ToDouble(mode1textbox.Text);
-                foreach (var i in ConverterRule.convertRule)
+                if (mode == 1)
                 {
-                    if (value >= i.Value.Item1 && value <= i.Value.Item2)
+                    mode2textbox.Text = String.Empty;
+                    var value = Convert.ToDouble(mode1textbox.Text);
+                    foreach (var i in ConverterRule.convertRule)
                     {
-                        if (i.Key == 21)
+                        if (value >= i.Value.Item1 && value <= i.Value.Item2)
                         {
-                            mode2textbox.Text = "21 or more";
-                            MessageBox.Show("Need to be decomposed");
+                            if (i.Key == 21)
+                            {
+                                mode2textbox.Text = "21 or more";
+                                MessageBox.Show("Need to be decomposed");
+                            }
+                            mode2textbox.Text = Convert.ToString(i.Key);
+                            break;
                         }
-                        mode2textbox.Text = Convert.ToString(i.Key);
-                        break;
+                    }
+                }
+                else
+                {
+                    mode2textbox.Text = String.Empty;
+                    var value = Convert.ToInt32(mode1textbox.Text);
+                    if (ConverterRule.convertRule.Keys.Contains(value))
+                    {
+                        mode2textbox.Text = ">= " + 
+                            Convert.ToString(Math.Round(ConverterRule.convertRule[value].Item1,2)) + 
+                            " & <= " + 
+                            Convert.ToString(Math.Round(ConverterRule.convertRule[value].Item2,2));
                     }
                 }
             }
@@ -84,6 +103,16 @@ namespace EstimateConverter
             {
                 mode2textbox.Text = String.Empty;
             }
+        }
+
+        private void changeModeLabel_Click(object sender, EventArgs e)
+        {
+            mode = mode == 1 ? 2 : 1;
+            mode1label.Text = mode == 1 ? days : sps;
+            mode2label.Text = mode == 2 ? days : sps;
+            mode1textbox.Text = String.Empty;
+            mode2textbox.Text = String.Empty;
+            mode2textbox.Width = mode == 1 ? mode2tbwidth : mode2tbwidth + 25;
         }
     }
 
@@ -95,13 +124,13 @@ namespace EstimateConverter
             double optPercent = 0.8;  // 20% from most likely
             double pesPercent = 1.35; // 35% from most likely
 
-            convertRule.Add(1, new Tuple<double, double, double>(0.7*optPercent, 0.7*pesPercent,0.7));
-            convertRule.Add(2, new Tuple<double, double, double>(1 * optPercent, 1 * pesPercent, 1));
-            convertRule.Add(3, new Tuple<double, double, double>(1.5 * optPercent, 1.5 * pesPercent, 1.5));
+            convertRule.Add(1, new Tuple<double, double, double>(0.3*optPercent, 0.3*pesPercent,0.3));
+            convertRule.Add(2, new Tuple<double, double, double>(0.8 * optPercent, 0.8 * pesPercent, 0.8));
+            convertRule.Add(3, new Tuple<double, double, double>(1.2 * optPercent, 1.2 * pesPercent, 1.2));
             convertRule.Add(5, new Tuple<double, double, double>(2 * optPercent, 2 * pesPercent, 2));
             convertRule.Add(8, new Tuple<double, double, double>(3.5 * optPercent, 3.5 * pesPercent, 3.5));
             convertRule.Add(13, new Tuple<double, double, double>(5 * optPercent, 5 * pesPercent, 5));
-            convertRule.Add(0, new Tuple<double, double, double>(0.1, 0.5, 0.4));
+            //convertRule.Add(0, new Tuple<double, double, double>(0.1, 0.5, 0.4));
             convertRule.Add(21, new Tuple<double, double, double>(7, 20, 15));
         }
 
